@@ -35,7 +35,7 @@ class _UploadExcelPageState extends State<UploadExcelPage> {
         }
 
         final headerRow = sheet.rows.first;
-        headers = headerRow.map((cell) => cell?.value.toString() ?? '').toList();
+        headers = headerRow.map((cell) => cell?.value?.toString() ?? '').toList();
 
         excelData = [];
         for (int i = 1; i < sheet.rows.length; i++) {
@@ -43,7 +43,8 @@ class _UploadExcelPageState extends State<UploadExcelPage> {
           Map<String, dynamic> rowData = {};
 
           for (int j = 0; j < headers.length; j++) {
-            rowData[headers[j]] = row[j]?.value;
+            final cellValue = row.length > j ? row[j]?.value : null;
+            rowData[headers[j]] = cellValue?.toString(); // 🔒 Safely stringify
           }
 
           excelData.add(rowData);

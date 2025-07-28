@@ -37,19 +37,27 @@ class _UploadTemplatePageState extends State<UploadTemplatePage> {
     }
   }
 
-  void proceedToDesign() {
-    if (_templateFile != null) {
-      Navigator.pushNamed(
-        context,
-        '/design_template',
-        arguments: {
-          'templateFile': _templateFile,
-          'headers': headers,
-          'excelData': excelData,
-        },
-      );
-    }
+void proceedToDesign() async {
+  if (_templateFile != null) {
+    final imageBytes = await _templateFile!.readAsBytes();
+   
+ print("➡️ Navigating with:");
+print("Headers: $headers");
+print("Excel: $excelData");
+print("Bytes: ${imageBytes.length}");
+
+
+    Navigator.pushNamed(
+  context,
+  '/design_template',
+  arguments: {
+    'headers': headers, // Must be a List<String>
+    'imageBytes': imageBytes, // Must be Uint8List
+    'excelData': excelData, // Must be List<Map<String, dynamic>>
+  },
+);
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -34,6 +34,7 @@ dependencies:
   excel: ^2.0.7
   http: ^1.2.1
   universal_html: ^2.2.4
+  flutter_colorpicker: ^1.0.3
   flutter_web_plugins:
     sdk: flutter
 
