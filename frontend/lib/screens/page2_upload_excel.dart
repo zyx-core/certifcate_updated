@@ -17,6 +17,7 @@ class _UploadExcelPageState extends State<UploadExcelPage> {
   List<String> headers = [];
   List<Map<String, dynamic>> excelData = [];
   Uint8List? excelBytes;
+  String? selectedEmailColumn;
 
   void _pickExcelFile() async {
   FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -51,15 +52,13 @@ class _UploadExcelPageState extends State<UploadExcelPage> {
         excelData.add(rowData);
       }
 
-      Navigator.pushNamed(
-        context,
-        '/page3',
-        arguments: {
-          'headers': headers,
-          'excelData': excelData,
-          'excelBytes': excelBytes,
-        },
-      );
+      setState(() {
+        // Auto-select email column if it exists
+        selectedEmailColumn = headers.firstWhere(
+          (h) => h.toLowerCase().contains('email'),
+          orElse: () => headers.isNotEmpty ? headers[0] : '',
+        );
+      });
     } else {
       print("Excel sheet is empty or invalid.");
     }
@@ -68,14 +67,97 @@ class _UploadExcelPageState extends State<UploadExcelPage> {
   }
 }
 
+  void _proceedToNextPage() {
+    if (headers.isEmpty || selectedEmailColumn == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please upload Excel file and select email column")),
+      );
+      return;
+    }
+
+    Navigator.pushNamed(
+      context,
+      '/page3',
+      arguments: {
+        'headers': headers,
+        'excelData': excelData,
+        'excelBytes': excelBytes,
+        'emailColumn': selectedEmailColumn,
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Upload Excel File updated")),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: _pickExcelFile,
-          child: const Text("Pick Excel File"),
+      appBar: AppBar(title: const Text("Upload Excel File")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _pickExcelFile,
+              icon: const Icon(Icons.upload_file),
+              label: const Text("Pick Excel File"),
+            ),
+            const SizedBox(height: 20),
+            if (headers.isNotEmpty) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Excel file loaded successfully!",
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text("Rows: ${excelData.length}"),
+                      Text("Columns: ${headers.length}"),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Select Email Column:",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: selectedEmailColumn,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: "Choose column containing emails",
+                        ),
+                        items: headers.map((header) {
+                          return DropdownMenuItem(
+                            value: header,
+                            child: Text(header),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedEmailColumn = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _proceedToNextPage,
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text("Continue to Upload Template"),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

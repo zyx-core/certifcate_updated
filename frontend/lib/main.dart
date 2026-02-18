@@ -41,6 +41,7 @@ class CertificateApp extends StatelessWidget {
             final headers = args['headers'];
             final imageBytes = args['imageBytes'];
             final excelData = args['excelData'];
+            final emailColumn = args['emailColumn'];
 
             if (headers == null || imageBytes == null || excelData == null) {
               return const Scaffold(
@@ -64,6 +65,7 @@ class CertificateApp extends StatelessWidget {
               headers: headerList,
               imageBytes: imageUint8,
               excelData: excelList,
+              emailColumn: emailColumn as String?,
             );
           } catch (e) {
             return Scaffold(

@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../models/certificate_field.dart';
 
 class PreviewCertificatePage extends StatefulWidget {
-  final File templateFile;
+  final Uint8List templateFile;
   final Map<String, CertificateField> headerConfigs;
   final Map<String, dynamic> rowData;
 
@@ -29,7 +29,7 @@ class _PreviewCertificatePageState extends State<PreviewCertificatePage> {
   }
 
   Future<void> _loadImageSize() async {
-    final image = Image.file(widget.templateFile);
+    final image = Image.memory(widget.templateFile);
     final completer = Completer<Size>();
 
     image.image.resolve(const ImageConfiguration()).addListener(
@@ -63,7 +63,7 @@ class _PreviewCertificatePageState extends State<PreviewCertificatePage> {
                 return Center(
                   child: Stack(
                     children: [
-                      Image.file(
+                      Image.memory(
                         widget.templateFile,
                         width: constraints.maxWidth,
                         fit: BoxFit.contain,

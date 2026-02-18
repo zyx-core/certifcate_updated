@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -10,9 +10,11 @@ class UploadTemplatePage extends StatefulWidget {
 }
 
 class _UploadTemplatePageState extends State<UploadTemplatePage> {
-  File? _templateFile;
+  Uint8List? _imageBytes;
+  String? _fileName;
   List<String> headers = [];
   List<Map<String, dynamic>> excelData = [];
+  String? emailColumn;
 
   @override
   void didChangeDependencies() {
@@ -21,6 +23,7 @@ class _UploadTemplatePageState extends State<UploadTemplatePage> {
     if (args != null) {
       headers = List<String>.from(args['headers']);
       excelData = List<Map<String, dynamic>>.from(args['excelData']);
+      emailColumn = args['emailColumn'] as String?;
     }
   }
 
@@ -28,23 +31,23 @@ class _UploadTemplatePageState extends State<UploadTemplatePage> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['png', 'jpg', 'jpeg'],
+      withData: true, // Important for web support
     );
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null && result.files.single.bytes != null) {
       setState(() {
-        _templateFile = File(result.files.single.path!);
+        _imageBytes = result.files.single.bytes;
+        _fileName = result.files.single.name;
       });
     }
   }
 
 void proceedToDesign() async {
-  if (_templateFile != null) {
-    final imageBytes = await _templateFile!.readAsBytes();
-   
+  if (_imageBytes != null) {
  print("➡️ Navigating with:");
 print("Headers: $headers");
 print("Excel: $excelData");
-print("Bytes: ${imageBytes.length}");
+print("Bytes: ${_imageBytes!.length}");
 
 
     Navigator.pushNamed(
@@ -52,8 +55,9 @@ print("Bytes: ${imageBytes.length}");
   '/design_template',
   arguments: {
     'headers': headers, // Must be a List<String>
-    'imageBytes': imageBytes, // Must be Uint8List
+    'imageBytes': _imageBytes, // Must be Uint8List
     'excelData': excelData, // Must be List<Map<String, dynamic>>
+    'emailColumn': emailColumn, // Pass email column
   },
 );
   }
@@ -63,21 +67,27 @@ print("Bytes: ${imageBytes.length}");
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Upload Template")),
-      body: Column(
-        children: [
-          ElevatedButton(
-            onPressed: pickTemplateFile,
-            child: const Text("Pick Template Image"),
-          ),
-          const SizedBox(height: 20),
-          if (_templateFile != null)
-            Image.file(_templateFile!, height: 200),
-          const Spacer(),
-          ElevatedButton(
-            onPressed: _templateFile != null ? proceedToDesign : null,
-            child: const Text("Design Certificate"),
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            ElevatedButton(
+              onPressed: pickTemplateFile,
+              child: const Text("Pick Template Image"),
+            ),
+            const SizedBox(height: 20),
+            if (_imageBytes != null) ...[
+              Text("Selected: $_fileName", style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Image.memory(_imageBytes!, height: 200),
+            ],
+            const Spacer(),
+            ElevatedButton(
+              onPressed: _imageBytes != null ? proceedToDesign : null,
+              child: const Text("Design Certificate"),
+            ),
+          ],
+        ),
       ),
     );
   }
